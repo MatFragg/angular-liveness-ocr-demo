@@ -13,8 +13,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { OpenCVService } from '../../core/services/opencv.service';
-import { CameraService } from '../../core/services/camera.service';
+import { OpenCVService } from '@core/services/opencv.service';
+import { CameraService } from '@core/services/camera.service';
 
 interface AnalysisResult {
   blurVariance: number;
