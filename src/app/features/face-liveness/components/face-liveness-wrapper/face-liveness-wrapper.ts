@@ -1,4 +1,5 @@
-import { Component, ElementRef, AfterViewInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, ElementRef, AfterViewInit, OnDestroy, ChangeDetectorRef, NgZone, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom, Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -123,9 +124,10 @@ export class FaceLivenessWrapper implements AfterViewInit, OnDestroy {
             this.zone.run(() => {
               console.log('⚡ Ejecutando cambio en zone');
               this.appState.setCurrentStep('choice');
+              this.router.navigate(['/validation/choice']);
               this.cd.markForCheck();
               this.cd.detectChanges();
-              console.log('✓ Paso actualizado a: choice');
+              console.log('✓ Paso actualizado a: choice y navegando...');
             });
             resolve();
           }, 500);
