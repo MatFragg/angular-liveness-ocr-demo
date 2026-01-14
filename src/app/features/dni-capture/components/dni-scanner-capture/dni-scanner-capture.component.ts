@@ -53,6 +53,8 @@ export class DniScannerCaptureComponent implements OnInit, OnDestroy {
   
   // Para navegación a liveness
   livenessReady = false;
+  
+  private router = inject(Router);
 
   constructor(
     private dniService: DniService,
@@ -289,6 +291,8 @@ export class DniScannerCaptureComponent implements OnInit, OnDestroy {
 
     try {
       this.appState.setCurrentStep('liveness');
+      this.router.navigate(['/liveness']);
+      console.log('✅ Navegando a /liveness');
     } catch (err) {
       console.warn('Error navegando a liveness:', err);
     }
