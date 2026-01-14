@@ -314,6 +314,8 @@ export class DniScannerComponent implements OnInit, OnDestroy {
     const videoWidth = video.videoWidth;
     const videoHeight = video.videoHeight;
 
+    console.log('🎥 Video dimensions:', videoWidth, 'x', videoHeight);
+
     // Configurar canvas con dimensiones completas del video temporalmente
     canvas.width = videoWidth;
     canvas.height = videoHeight;
@@ -335,6 +337,13 @@ export class DniScannerComponent implements OnInit, OnDestroy {
     const frameX = (videoWidth - frameWidth) / 2;
     const frameY = (videoHeight - frameHeight) / 2;
 
+    console.log('📐 Frame calculation:');
+    console.log('  - frameWidth:', Math.round(frameWidth), 'px');
+    console.log('  - frameHeight:', Math.round(frameHeight), 'px');
+    console.log('  - frameX:', Math.round(frameX), 'px');
+    console.log('  - frameY:', Math.round(frameY), 'px');
+    console.log('  - Crop area: from (', Math.round(frameX), ',', Math.round(frameY), ') size (', Math.round(frameWidth), 'x', Math.round(frameHeight), ')');
+
     // Extraer solo el área del marco guía
     const croppedImageData = ctx.getImageData(
       frameX,
@@ -342,6 +351,8 @@ export class DniScannerComponent implements OnInit, OnDestroy {
       frameWidth,
       frameHeight
     );
+
+    console.log('✂️  Image cropped, data length:', croppedImageData.data.length);
 
     // Crear nuevo canvas con solo el área recortada
     const croppedCanvas = document.createElement('canvas');
@@ -356,6 +367,11 @@ export class DniScannerComponent implements OnInit, OnDestroy {
 
     // Convertir a base64 - Solo el área del marco
     const imageBase64 = croppedCanvas.toDataURL('image/jpeg', 0.95);
+
+    console.log('🖼️  Final cropped image:');
+    console.log('  - Canvas dimensions:', croppedCanvas.width, 'x', croppedCanvas.height);
+    console.log('  - Base64 length:', imageBase64.length, 'characters');
+    console.log('  - Estimated size:', Math.round(imageBase64.length * 0.75 / 1024), 'KB');
 
     // Emitir evento con imagen recortada
     this.imageCaptured.emit(imageBase64);

@@ -201,10 +201,14 @@
 }
 
 /* Primary Buttons */
-button[mat-raised-button][color="primary"],
+button[mat-raised-button][color='primary'],
 .start-btn,
 .confirm-btn {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%) !important;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-dark) 100%
+  ) !important;
   color: var(--color-white) !important;
   font-size: var(--text-base) !important;
   font-weight: var(--font-weight-semibold) !important;
@@ -216,7 +220,7 @@ button[mat-raised-button][color="primary"],
   border: none !important;
 }
 
-button[mat-raised-button][color="primary"]:hover:not(:disabled),
+button[mat-raised-button][color='primary']:hover:not(:disabled),
 .start-btn:hover:not(:disabled),
 .confirm-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--color-primary-dark) 0%, #4556c7 100%) !important;
@@ -224,13 +228,13 @@ button[mat-raised-button][color="primary"]:hover:not(:disabled),
   box-shadow: var(--shadow-lg) !important;
 }
 
-button[mat-raised-button][color="primary"]:active:not(:disabled),
+button[mat-raised-button][color='primary']:active:not(:disabled),
 .start-btn:active:not(:disabled),
 .confirm-btn:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
 }
 
-button[mat-raised-button][color="primary"]:disabled,
+button[mat-raised-button][color='primary']:disabled,
 .start-btn:disabled,
 .confirm-btn:disabled {
   opacity: 0.5 !important;
@@ -325,7 +329,8 @@ button mat-icon {
   background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
   color: var(--color-white);
   padding: var(--space-4);
-  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-4) calc(var(--space-4) * -1);
+  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-4)
+    calc(var(--space-4) * -1);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
@@ -352,7 +357,10 @@ button mat-icon {
 
 .preview-section .preview-image {
   max-width: 100%;
-  max-height: 400px;
+  max-height: 300px; /* Reducido de 400px a 300px */
+  width: auto;
+  height: auto;
+  object-fit: contain;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
 }
@@ -394,7 +402,8 @@ button mat-icon {
 .final-preview-section .image-card mat-card-header {
   background: var(--color-neutral-50);
   padding: var(--space-3) var(--space-4);
-  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-4) calc(var(--space-4) * -1);
+  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-4)
+    calc(var(--space-4) * -1);
 }
 
 .final-preview-section .image-card mat-card-header mat-card-title {
@@ -404,10 +413,14 @@ button mat-icon {
 }
 
 .final-preview-section .final-preview-image {
+  max-width: 350px; /* Ancho máximo en lugar de 100% */
   width: 100%;
   height: auto;
+  object-fit: contain;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  display: block;
+  margin: 0 auto; /* Centrar la imagen */
 }
 
 .final-preview-section .image-card mat-card-actions {
@@ -462,8 +475,12 @@ button mat-icon {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* === RESULT SECTION === */
@@ -476,7 +493,8 @@ button mat-icon {
   background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
   color: var(--color-white);
   padding: var(--space-5);
-  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-6) calc(var(--space-4) * -1);
+  margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-6)
+    calc(var(--space-4) * -1);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
