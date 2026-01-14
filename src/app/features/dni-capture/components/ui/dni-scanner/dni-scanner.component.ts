@@ -326,8 +326,8 @@ export class DniScannerComponent implements OnInit, OnDestroy {
     // Capturar frame completo primero
     ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
 
-    // Calcular dimensiones del marco guía (85% width, aspect ratio 1.586)
-    const frameWidthPercent = 0.85; // 85% del ancho
+    // Calcular dimensiones del marco guía (65% width, aspect ratio 1.586)
+    const frameWidthPercent = 0.65; // 65% del ancho - más preciso, solo el documento
     const frameAspectRatio = 1.586; // Proporción DNI peruano
     
     const frameWidth = videoWidth * frameWidthPercent;

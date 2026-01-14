@@ -124,7 +124,7 @@
 /* === GUIDE FRAME (Heurística 10: Ayuda Visual) === */
 .guide-frame {
   position: relative;
-  width: 85%;
+  width: 65%; /* Reducido de 85% a 65% - captura solo documento */
   aspect-ratio: 1.586; /* DNI aspect ratio */
   border: 3px dashed var(--color-warning);
   border-radius: var(--radius-lg);
