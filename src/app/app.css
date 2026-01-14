@@ -1,0 +1,415 @@
+/* ================================================
+   APP LAYOUT - Aplicando Heurísticas UX/UI
+   ================================================ */
+
+/* === MAIN CONTAINER (Heurística 8: Minimalismo) === */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6);
+  min-height: 100vh;
+}
+
+/* === STEP INDICATOR (Heurística 1: Visibilidad del Estado) === */
+.steps-header {
+  background: var(--color-white);
+  padding: var(--space-8) var(--space-6);
+  margin-bottom: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+}
+
+.steps-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+/* Step Circle - Primary Visual Indicator */
+.step-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--text-lg);
+  transition: all var(--transition-base);
+  z-index: var(--z-base);
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Active Step (Heurística 1: Estado Visible) */
+.step-item.active .step-circle {
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2), var(--shadow-md);
+  transform: scale(1.1);
+}
+
+/* Completed Step (Heurística 12: Feedback) */
+.step-item.completed .step-circle {
+  background: var(--color-success);
+  color: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.step-item.completed .step-circle::after {
+  content: '✓';
+  position: absolute;
+  font-size: var(--text-base);
+}
+
+/* Step Label (Heurística 6: Reconocimiento vs Recuerdo) */
+.step-label {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-600);
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 100px;
+  line-height: var(--line-height-tight);
+}
+
+.step-item.active .step-label {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.step-item.completed .step-label {
+  color: var(--color-success);
+}
+
+/* Step Connector Line (Heurística 1: Progreso Visual) */
+.step-connector {
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  background: var(--color-neutral-200);
+  z-index: 0;
+  transition: background var(--transition-slow);
+}
+
+.step-item.completed .step-connector {
+  background: var(--color-success);
+}
+
+/* === STEP CONTENT (Heurística 12: Animaciones) === */
+.step-content {
+  animation: fadeInUp var(--transition-slow);
+  overflow-x: hidden;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === COMPLETION MESSAGE (Heurística 12: Feedback Positivo) === */
+.completion-message {
+  text-align: center;
+  padding: var(--space-16) var(--space-6);
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+  color: var(--color-white);
+  font-size: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-6);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  animation: scaleIn var(--transition-slow);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.completion-message h2 {
+  color: var(--color-neutral-900);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-2xl);
+}
+
+.completion-message p {
+  color: var(--color-neutral-600);
+  margin-bottom: var(--space-8);
+  font-size: var(--text-lg);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Button Styles (Heurística 3: Control del Usuario) */
+.btn-restart {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  padding: var(--space-3) var(--space-8);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+  min-height: var(--touch-target-min);
+}
+
+.btn-restart:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.btn-restart:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* === TOGGLE BUTTON (Heurística 3: Control y Libertad) === */
+.capture-method-toggle {
+  max-width: 600px;
+  margin: 0 auto var(--space-8);
+}
+
+.toggle-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-white);
+  border: 2px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: inherit;
+  box-shadow: var(--shadow-sm);
+  min-height: var(--touch-target-min);
+}
+
+.toggle-button:hover {
+  background: var(--color-neutral-50);
+  border-color: var(--color-neutral-300);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.toggle-button.active {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.toggle-button.active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.toggle-button.active .toggle-icon {
+  animation: bounce 0.6s ease;
+}
+
+.toggle-icon {
+  font-size: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  flex-shrink: 0;
+}
+
+.toggle-text {
+  flex: 1;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+}
+
+.toggle-hint {
+  font-size: var(--text-xs);
+  opacity: 0.8;
+  font-weight: var(--font-weight-normal);
+  margin-top: var(--space-1);
+  display: block;
+}
+
+@keyframes bounce {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.2) rotate(5deg); 
+  }
+}
+
+/* === RESPONSIVE DESIGN (Heurística 11: Accesibilidad) === */
+@media (max-width: 768px) {
+  .app-container {
+    padding: var(--space-4);
+  }
+
+  .steps-header {
+    padding: var(--space-6) var(--space-4);
+    margin-bottom: var(--space-6);
+    min-height: 110px;
+  }
+
+  .steps-container {
+    gap: var(--space-1);
+  }
+
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: var(--text-base);
+  }
+
+  .step-item.active .step-circle {
+    transform: scale(1.05);
+  }
+
+  .step-label {
+    font-size: var(--text-xs);
+    margin-top: var(--space-2);
+    max-width: 80px;
+  }
+
+  .step-connector {
+    top: 20px;
+  }
+
+  .completion-message {
+    padding: var(--space-12) var(--space-4);
+  }
+
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 36px;
+  }
+
+  .toggle-button {
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .toggle-icon {
+    font-size: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .toggle-text {
+    font-size: var(--text-sm);
+  }
+
+  .toggle-hint {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    padding: var(--space-2);
+  }
+
+  .steps-header {
+    padding: var(--space-4) var(--space-3);
+    margin-bottom: var(--space-4);
+    min-height: auto;
+  }
+
+  .steps-container {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .step-item {
+    flex-direction: row;
+    gap: var(--space-3);
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: var(--text-sm);
+  }
+
+  .step-label {
+    margin-top: 0;
+    margin-left: 0;
+    text-align: left;
+    max-width: none;
+    flex: 1;
+  }
+
+  .step-connector {
+    display: none;
+  }
+
+  .toggle-hint {
+    display: none;
+  }
+}
+
+/* === PRINT STYLES === */
+@media print {
+  .steps-header,
+  .toggle-button {
+    display: none;
+  }
+
+  .app-container {
+    max-width: 100%;
+    padding: 0;
+  }
+}

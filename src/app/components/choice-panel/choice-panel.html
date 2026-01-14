@@ -1,0 +1,86 @@
+<div class="choice-container">
+  <!-- Header -->
+  <div class="choice-header">
+    <h1>
+      <i class="icon">✓</i>
+      ¡Verificación de Vida Completada!
+    </h1>
+    <p class="subtitle">Se capturó exitosamente una foto de referencia. Ahora elige cómo deseas proceder.</p>
+  </div>
+
+  <!-- Información capturada en dos columnas -->
+  <div class="captured-info">
+    <!-- DNI Info -->
+    <div class="info-card dni-card">
+      <div class="info-icon">👤</div>
+      <h3>Datos del DNI</h3>
+      <div *ngIf="capturedDni" class="dni-details">
+        <p class="dni-number"><strong>{{ capturedDni.numeroDni }}</strong></p>
+        <div *ngIf="capturedDni.fotoPersona" class="dni-image">
+          <img [src]="'data:image/jpeg;base64,' + capturedDni.fotoPersona" alt="Foto DNI" />
+        </div>
+      </div>
+      <p *ngIf="!capturedDni" class="text-muted">No disponible</p>
+    </div>
+
+    <!-- Liveness Photo -->
+    <div class="info-card liveness-card">
+      <div class="info-icon">📸</div>
+      <h3>Foto Capturada</h3>
+      <p class="text-message">Imagen capturada</p>
+      <div *ngIf="livenessPhoto" class="liveness-image">
+        <img [src]="'data:image/jpeg;base64,' + livenessPhoto" alt="Foto Liveness" />
+      </div>
+      <p *ngIf="!livenessPhoto" class="text-muted">No disponible</p>
+    </div>
+  </div>
+
+  <!-- Opciones de acción -->
+  <div class="action-section">
+    <h2>¿Qué deseas hacer?</h2>
+    
+    <div class="options-grid">
+      <!-- Opción 1: Comparación con DNI -->
+      <div class="option-card">
+        <div class="option-icon">🔍</div>
+        <div class="option-content">
+          <h3>Comparación Facial</h3>
+          <p>Compara tu foto de vida con la foto registrada en tu DNI</p>
+        </div>
+        <button 
+          (click)="goToCompareDni()" 
+          class="btn-option btn-compare"
+          title="Comparar rostro con DNI"
+        >
+          <span class="btn-text">Comparar con DNI</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Opción 2: Validación RENIEC -->
+      <div class="option-card">
+        <div class="option-icon">🏛️</div>
+        <div class="option-content">
+          <h3>Validación RENIEC</h3>
+          <p>Valida tu identidad directamente con la base de datos de RENIEC</p>
+        </div>
+        <button 
+          (click)="goToReniecValidation()" 
+          class="btn-option btn-reniec"
+          title="Validar con RENIEC"
+        >
+          <span class="btn-text">Validar con RENIEC</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón de retroceso -->
+  <div class="footer-action">
+    <button (click)="goBack()" class="btn-back">
+      <span class="icon">←</span>
+      Volver a capturar DNI
+    </button>
+  </div>
+</div>

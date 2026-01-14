@@ -1,0 +1,174 @@
+<div class="page">
+  <header class="page-header">
+    <div class="title">
+      <span class="emoji">🤖</span>
+      <h1>Scanner Automático de DNI</h1>
+    </div>
+    <!-- Voice controls -->
+    <div class="voice-controls">
+      <button 
+        class="voice-btn" 
+        [class.active]="voiceEnabled"
+        (click)="toggleVoice()"
+        title="Toggle audio instructions"
+        aria-label="Toggle voice"
+      >
+        {{ voiceEnabled ? '🔊' : '🔇' }}
+      </button>
+      <select 
+        *ngIf="voiceEnabled"
+        [(ngModel)]="voiceLanguage" 
+        (change)="changeLanguage(voiceLanguage)"
+        class="language-select"
+        aria-label="Select voice language"
+      >
+        <option value="es-ES">Español (España)</option>
+        <option value="es-MX">Español (México)</option>
+        <option value="en-US">English (USA)</option>
+      </select>
+    </div>
+  </header>
+
+  <section class="hero card" *ngIf="captureStep === 'idle'">
+    <div class="hero-badge">ID</div>
+    <h2>Escáner de DNI Peruano</h2>
+    <p>Coloca tu documento sobre una superficie plana y con buena luz.</p>
+    <button class="btn-gradient" mat-raised-button aria-label="Iniciar escaneo" (click)="startCapture()">
+      📸 INICIAR ESCÁNEO
+    </button>
+  </section>
+
+  <section class="capture card" *ngIf="captureStep !== 'idle' || previewMode">
+    <div class="section-header">
+      <div class="stepper">
+        <div class="step" [class.active]="captureStep==='front' || captureStep==='back' || captureStep==='preview'">
+          <div class="dot">1</div><span>Anverso</span>
+        </div>
+        <div class="step" [class.active]="captureStep==='back' || captureStep==='preview'">
+          <div class="dot">2</div><span>Reverso</span>
+        </div>
+        <div class="step" [class.active]="captureStep==='preview'">
+          <div class="dot">3</div><span>Vista previa</span>
+        </div>
+      </div>
+      <h3>{{ captureStep === 'front' ? 'Captura del Anverso' : (captureStep === 'back' ? 'Captura del Reverso' : 'Vista previa') }}</h3>
+      <p class="tip" *ngIf="captureStep!=='preview'">
+        Alinea el DNI dentro del recuadro, evita reflejos y mueve lo menos posible.
+      </p>
+    </div>
+    <div class="capture-content">
+      <div class="camera">
+        <!-- Native video element receiving the MediaStream; we capture frames from it at native resolution -->
+        <video #videoElement class="webcam-view" autoplay playsinline muted></video>
+
+        <!-- Moved countdown inside camera as an overlay so it's always visible -->
+        <div *ngIf="countdownRunning && (captureStep==='front' || captureStep==='back')" class="countdown overlay-count">
+          <div class="count">{{ currentCount }}</div>
+          <div class="count-label">Capturando</div>
+        </div>
+        <div *ngIf="resolvedWidth && resolvedHeight" class="resolution-badge">{{ resolvedWidth }} x {{ resolvedHeight }}</div>
+      </div>
+      <!-- Buttons removed per request (capture and cancel hidden) -->
+    </div>
+
+    <mat-progress-bar *ngIf="uploading" mode="indeterminate" color="primary"></mat-progress-bar>
+
+    <div class="preview" *ngIf="previewMode">
+      <h3>Vista previa</h3>
+      <div class="preview-grid">
+        <div class="preview-item" *ngIf="frontPreviewDataUrl">
+          <div class="label">Anverso</div>
+          <img [src]="frontPreviewDataUrl" width="260" />
+        </div>
+        <div class="preview-item" *ngIf="backPreviewDataUrl">
+          <div class="label">Reverso</div>
+          <img [src]="backPreviewDataUrl" width="260" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="confirm-btn" mat-raised-button color="accent" [disabled]="uploading" (click)="confirmUpload()">
+          <span class="btn-icon">✅</span>
+          <span>Confirmar y subir</span>
+        </button>
+        <!-- Agregar después del botón de confirmación -->
+<div *ngIf="uploading" class="processing-status">
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <p>Procesando DNI, por favor espere...</p>
+</div>
+
+<div *ngIf="!uploading && capturedList.length === 0 && lastProcessedDni === null" class="ready-status">
+  <p>Listo para capturar DNI</p>
+</div>
+        <button class="outline-btn" mat-button [disabled]="uploading" (click)="resetCapture()">
+          <span class="btn-icon">🔄</span>
+          <span>Repetir</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="table-card card">
+    <div class="section-title">
+      <span class="emoji">👥</span>
+      <h3>Personas Registradas</h3>
+    </div>
+    <table mat-table [dataSource]="capturedList" class="mat-elevation-z8 full-width">
+      <ng-container matColumnDef="fotoPersona">
+        <th mat-header-cell *matHeaderCellDef>Foto</th>
+        <td mat-cell *matCellDef="let item">
+          <img [src]="'data:image/jpeg;base64,' + item.fotoPersona" width="64" height="64" class="avatar" />
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="numeroDni">
+        <th mat-header-cell *matHeaderCellDef>DNI</th>
+        <td mat-cell *matCellDef="let item">{{ item.numeroDni }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="frontImage">
+        <th mat-header-cell *matHeaderCellDef>Anverso</th>
+        <td mat-cell *matCellDef="let item">
+          <div class="image-container">
+            <img [src]="'data:image/jpeg;base64,' + item.frontImageBase64" 
+                 width="80" 
+                 (error)="onImageError($event, item, 'front')"
+                 [class.hidden]="hasImageError(item, 'front')" />
+            <div *ngIf="hasImageError(item, 'front')" class="image-error">
+              <p>No se puede mostrar la imagen</p>
+              <button mat-button color="primary" (click)="downloadImage(item.frontImageBase64, 'Anverso_' + item.numeroDni + '.jpg')">
+                📥 Descargar
+              </button>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="backImage">
+        <th mat-header-cell *matHeaderCellDef>Reverso</th>
+        <td mat-cell *matCellDef="let item">
+          <div class="image-container">
+            <img [src]="'data:image/jpeg;base64,' + item.backImageBase64" 
+                 width="80" 
+                 (error)="onImageError($event, item, 'back')"
+                 [class.hidden]="hasImageError(item, 'back')" />
+            <div *ngIf="hasImageError(item, 'back')" class="image-error">
+              <p>No se puede mostrar la imagen</p>
+              <button mat-button color="primary" (click)="downloadImage(item.backImageBase64, 'Reverso_' + item.numeroDni + '.jpg')">
+                📥 Descargar
+              </button>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="['fotoPersona', 'numeroDni', 'frontImage', 'backImage']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['fotoPersona', 'numeroDni', 'frontImage', 'backImage'];"></tr>
+      <tr class="mat-row no-data" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="9">No hay personas registradas aún.</td>
+      </tr>
+    </table>
+    <div style="margin-top:16px; text-align:center;" *ngIf="livenessReady">
+      <button mat-raised-button color="primary" (click)="goToLiveness()">Ir a Liveness</button>
+    </div>
+  </section>
+</div>

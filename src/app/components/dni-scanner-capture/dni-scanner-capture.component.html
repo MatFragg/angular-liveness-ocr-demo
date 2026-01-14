@@ -1,0 +1,308 @@
+<div class="dni-scanner-capture-container">
+  <!-- Header -->
+  <div class="capture-header">
+    <h1>
+      <mat-icon>badge</mat-icon>
+      Captura de DNI con Scanner Reactivo
+    </h1>
+    <p class="subtitle">Sistema inteligente con detección automática de calidad</p>
+  </div>
+
+  <!-- Estado: Idle (Inicio) -->
+  @if (currentStep === 'idle') {
+    <div class="welcome-section">
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>info</mat-icon>
+            ¿Cómo funciona?
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="features-grid">
+            <mat-card class="feature-card">
+              <mat-card-content>
+                <div class="feature-icon-wrapper">
+                  <mat-icon class="feature-icon">blur_off</mat-icon>
+                </div>
+                <h3>Detección de Desenfoque</h3>
+                <p>El sistema verifica automáticamente que la imagen esté nítida</p>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="feature-card">
+              <mat-card-content>
+                <div class="feature-icon-wrapper">
+                  <mat-icon class="feature-icon">zoom_in</mat-icon>
+                </div>
+                <h3>Validación de Distancia</h3>
+                <p>Te guía para capturar el DNI a la distancia correcta</p>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="feature-card">
+              <mat-card-content>
+                <div class="feature-icon-wrapper">
+                  <mat-icon class="feature-icon">done_all</mat-icon>
+                </div>
+                <h3>Feedback en Tiempo Real</h3>
+                <p>Mensajes instantáneos sobre la calidad de la captura</p>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="feature-card">
+              <mat-card-content>
+                <div class="feature-icon-wrapper">
+                  <mat-icon class="feature-icon">camera_enhance</mat-icon>
+                </div>
+                <h3>Captura Optimizada</h3>
+                <p>Permite captura manual cuando tú decidas que está listo</p>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <div class="capture-steps">
+            <h3>Pasos a seguir:</h3>
+            <ol>
+              <li>Coloca el <strong>frente</strong> del DNI en el marco guía</li>
+              <li>Espera a que el sistema valide la calidad</li>
+              <li>Captura cuando el marco esté <strong class="text-success">verde</strong></li>
+              <li>Repite el proceso con el <strong>reverso</strong></li>
+              <li>Confirma y procesa las imágenes</li>
+            </ol>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="startCapture()" class="start-btn">
+            <mat-icon>camera_alt</mat-icon>
+            Iniciar Captura
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Estado: Capturando Frente -->
+  @if (currentStep === 'capturing-front') {
+    <div class="scanner-section">
+      <div class="scanner-header">
+        <h2>
+          <mat-icon>credit_card</mat-icon>
+          Paso 1: Captura del FRENTE
+        </h2>
+        <p>Posiciona el frente del DNI dentro del marco</p>
+      </div>
+
+      <app-dni-scanner
+        [analysisIntervalMs]="400"
+        [allowManualCapture]="true"
+        (imageCaptured)="onImageCaptured($event)"
+        (scannerError)="onScannerError($event)"
+        (scannerReady)="onScannerReady()">
+      </app-dni-scanner>
+
+      <div class="scanner-actions">
+        <button mat-stroked-button (click)="resetCapture()">
+          <mat-icon>close</mat-icon>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Estado: Frente Capturado -->
+  @if (currentStep === 'front-captured') {
+    <div class="preview-section">
+      <mat-card class="preview-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="success-icon">check_circle</mat-icon>
+            Frente Capturado
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="image-preview">
+            <img [src]="frontImageBase64" alt="Frente del DNI" class="preview-image">
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="captureBack()">
+            <mat-icon>navigate_next</mat-icon>
+            Capturar Reverso
+          </button>
+          <button mat-stroked-button (click)="recaptureFront()">
+            <mat-icon>refresh</mat-icon>
+            Recapturar Frente
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Estado: Capturando Reverso -->
+  @if (currentStep === 'capturing-back') {
+    <div class="scanner-section">
+      <div class="scanner-header">
+        <h2>
+          <mat-icon>flip</mat-icon>
+          Paso 2: Captura del REVERSO
+        </h2>
+        <p>Ahora voltea el DNI y posiciónalo en el marco</p>
+      </div>
+
+      <app-dni-scanner
+        [analysisIntervalMs]="400"
+        [allowManualCapture]="true"
+        (imageCaptured)="onImageCaptured($event)"
+        (scannerError)="onScannerError($event)"
+        (scannerReady)="onScannerReady()">
+      </app-dni-scanner>
+
+      <div class="scanner-actions">
+        <button mat-stroked-button (click)="cancelCurrentScan()">
+          <mat-icon>arrow_back</mat-icon>
+          Volver
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Estado: Preview (Ambas imágenes capturadas) -->
+  @if (currentStep === 'preview') {
+    <div class="final-preview-section">
+      <h2 class="section-title">
+        <mat-icon>preview</mat-icon>
+        Revisión de Capturas
+      </h2>
+
+      <div class="images-grid">
+        <mat-card class="image-card">
+          <mat-card-header>
+            <mat-card-title>Frente del DNI</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <img [src]="frontImageBase64" alt="Frente del DNI" class="final-preview-image">
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button (click)="downloadImage(frontImageBase64, 'dni-front.jpg')">
+              <mat-icon>download</mat-icon>
+              Descargar
+            </button>
+            <button mat-button (click)="recaptureFront()">
+              <mat-icon>refresh</mat-icon>
+              Recapturar
+            </button>
+          </mat-card-actions>
+        </mat-card>
+
+        <mat-card class="image-card">
+          <mat-card-header>
+            <mat-card-title>Reverso del DNI</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <img [src]="backImageBase64" alt="Reverso del DNI" class="final-preview-image">
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button (click)="downloadImage(backImageBase64, 'dni-back.jpg')">
+              <mat-icon>download</mat-icon>
+              Descargar
+            </button>
+            <button mat-button (click)="recaptureBack()">
+              <mat-icon>refresh</mat-icon>
+              Recapturar
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <div class="confirmation-actions">
+        <button mat-raised-button color="primary" (click)="confirmAndProcess()" class="confirm-btn">
+          <mat-icon>send</mat-icon>
+          Confirmar y Procesar
+        </button>
+        <button mat-stroked-button (click)="resetCapture()">
+          <mat-icon>restart_alt</mat-icon>
+          Reiniciar Captura
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Estado: Procesando -->
+  @if (currentStep === 'processing') {
+    <div class="processing-section">
+      <mat-card class="processing-card">
+        <mat-card-content>
+          <div class="processing-content">
+            <mat-icon class="processing-icon">hourglass_top</mat-icon>
+            <h2>Procesando DNI...</h2>
+            <p>Validando información y extrayendo datos</p>
+            <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Estado: Completado -->
+  @if (currentStep === 'completed' && result) {
+    <div class="result-section">
+      <mat-card class="result-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="success-icon large">verified</mat-icon>
+            DNI Procesado Exitosamente
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="result-grid">
+            <div class="result-item">
+              <span class="label">Número de DNI:</span>
+              <span class="value">{{ result.numeroDni }}</span>
+            </div>
+            <div class="result-item">
+              <span class="label">Nombres:</span>
+              <span class="value">{{ result.nombres }}</span>
+            </div>
+            <div class="result-item">
+              <span class="label">Apellidos:</span>
+              <span class="value">{{ result.apellidos }}</span>
+            </div>
+            @if (result.fechaNacimiento) {
+              <div class="result-item">
+                <span class="label">Fecha de Nacimiento:</span>
+                <span class="value">{{ result.fechaNacimiento }}</span>
+              </div>
+            }
+            @if (result.sexo) {
+              <div class="result-item">
+                <span class="label">Sexo:</span>
+                <span class="value">{{ result.sexo }}</span>
+              </div>
+            }
+          </div>
+
+          @if (result.fotoPersona || result.frontImageBase64) {
+            <div class="result-photo">
+              <h3>Foto del DNI:</h3>
+              <img 
+                [src]="'data:image/jpeg;base64,' + (result.fotoPersona || result.frontImageBase64)" 
+                alt="Foto del DNI"
+                class="dni-photo">
+            </div>
+          }
+        </mat-card-content>
+        <mat-card-actions class="result-actions">
+          <button mat-raised-button color="primary" (click)="goToLiveness()" [disabled]="!livenessReady">
+            <mat-icon>navigate_next</mat-icon>
+            Continuar a Verificación de Vida
+          </button>
+          <button mat-stroked-button (click)="resetCapture()">
+            <mat-icon>restart_alt</mat-icon>
+            Capturar Otro DNI
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  }
+</div>
