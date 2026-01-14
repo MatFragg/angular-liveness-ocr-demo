@@ -241,6 +241,8 @@ export class CompareDni implements OnInit {
     
     alert(alertMessage);
     this.appState.resetToStart();
+    this.router.navigate(['/dni-capture']);
+    console.log('✅ Navegando a inicio después de finalizar');
   }
 
   goBack(): void {
