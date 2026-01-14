@@ -300,7 +300,7 @@ export class DniScannerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Captura la imagen del DNI
+   * Captura la imagen del DNI - Solo el área del marco guía
    */
   captureImage(): void {
     if (!this.isReadyToCapture() || !this.canvasElement) {
@@ -310,23 +310,58 @@ export class DniScannerComponent implements OnInit, OnDestroy {
     const canvas = this.canvasElement.nativeElement;
     const video = this.videoElement.nativeElement;
 
-    // Asegurar dimensiones correctas
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Dimensiones del video
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+
+    // Configurar canvas con dimensiones completas del video temporalmente
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Capturar frame actual
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Capturar frame completo primero
+    ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
 
-    // Convertir a base64
-    const imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
+    // Calcular dimensiones del marco guía (85% width, aspect ratio 1.586)
+    const frameWidthPercent = 0.85; // 85% del ancho
+    const frameAspectRatio = 1.586; // Proporción DNI peruano
+    
+    const frameWidth = videoWidth * frameWidthPercent;
+    const frameHeight = frameWidth / frameAspectRatio;
+    
+    // Calcular posición centrada del marco
+    const frameX = (videoWidth - frameWidth) / 2;
+    const frameY = (videoHeight - frameHeight) / 2;
 
-    // Emitir evento con imagen capturada
+    // Extraer solo el área del marco guía
+    const croppedImageData = ctx.getImageData(
+      frameX,
+      frameY,
+      frameWidth,
+      frameHeight
+    );
+
+    // Crear nuevo canvas con solo el área recortada
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = frameWidth;
+    croppedCanvas.height = frameHeight;
+    const croppedCtx = croppedCanvas.getContext('2d');
+    
+    if (!croppedCtx) return;
+    
+    // Colocar imagen recortada en el nuevo canvas
+    croppedCtx.putImageData(croppedImageData, 0, 0);
+
+    // Convertir a base64 - Solo el área del marco
+    const imageBase64 = croppedCanvas.toDataURL('image/jpeg', 0.95);
+
+    // Emitir evento con imagen recortada
     this.imageCaptured.emit(imageBase64);
 
-    console.log('✅ DNI captured successfully');
+    console.log('✅ DNI captured successfully (cropped to frame area)');
+    console.log(`📐 Frame dimensions: ${Math.round(frameWidth)}x${Math.round(frameHeight)}px`);
   }
 
   /**
