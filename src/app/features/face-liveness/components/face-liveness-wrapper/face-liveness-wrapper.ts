@@ -24,6 +24,7 @@ export class FaceLivenessWrapper implements AfterViewInit, OnDestroy {
   private root?: Root;
   private destroy$ = new Subject<void>();
   private isTransitioning = false;
+  private router = inject(Router);
 
   constructor(
     private host: ElementRef, 
