@@ -310,51 +310,89 @@ export class DniScannerComponent implements OnInit, OnDestroy {
     const canvas = this.canvasElement.nativeElement;
     const video = this.videoElement.nativeElement;
 
-    // Dimensiones del video
+    // Dimensiones REALES del video (intrínsecas)
     const videoWidth = video.videoWidth;
     const videoHeight = video.videoHeight;
+    const videoAspectRatio = videoWidth / videoHeight;
 
-    console.log('🎥 Video dimensions:', videoWidth, 'x', videoHeight);
+    // Dimensiones del CONTENEDOR (definido por CSS como aspect-ratio: 4/3)
+    // Asumimos 4/3 porque es lo que está en el SCSS
+    const containerAspectRatio = 4 / 3;
 
-    // Configurar canvas con dimensiones completas del video temporalmente
+    console.log('🎥 Raw Video:', videoWidth, 'x', videoHeight, `(Ratio: ${videoAspectRatio.toFixed(2)})`);
+    console.log('📦 Container Ratio:', containerAspectRatio.toFixed(2));
+
+    // CALCULAR EL ÁREA VISIBLE DEL VIDEO (debido a object-fit: cover)
+    // Imaginamos un recuadro dentro del video original que representa lo que el usuario ve
+    let visibleWidth, visibleHeight, visibleX, visibleY;
+
+    if (videoAspectRatio > containerAspectRatio) {
+      // El video es más ANCHO que el contenedor (ej. 16:9 vs 4:3)
+      // Se recorta horizontalmente (los lados se pierden)
+      // La altura visible es toda la altura del video
+      visibleHeight = videoHeight;
+      visibleWidth = videoHeight * containerAspectRatio;
+      
+      // Centramos horizontalmente
+      visibleX = (videoWidth - visibleWidth) / 2;
+      visibleY = 0;
+    } else {
+      // El video es más ALTO que el contenedor (ej. vertical en móvil)
+      // Se recorta verticalmente (arriba/abajo se pierden)
+      // El ancho visible es todo el ancho del video
+      visibleWidth = videoWidth;
+      visibleHeight = visibleWidth / containerAspectRatio;
+
+      // Centramos verticalmente
+      visibleX = 0;
+      visibleY = (videoHeight - visibleHeight) / 2;
+    }
+
+    console.log('👀 Visible Video Area:', Math.round(visibleWidth), 'x', Math.round(visibleHeight), 'at', Math.round(visibleX), ',', Math.round(visibleY));
+
+    // Configurar canvas con dimensiones completas para drawImage
     canvas.width = videoWidth;
     canvas.height = videoHeight;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Capturar frame completo primero
+    // Dibujar frame completo
     ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
 
-    // Calcular dimensiones del marco guía (65% width, aspect ratio 1.586)
-    const frameWidthPercent = 0.65; // 65% del ancho - más preciso, solo el documento
-    const frameAspectRatio = 1.586; // Proporción DNI peruano
-    
-    const frameWidth = videoWidth * frameWidthPercent;
+    // CALCULAR EL MARCO GUÍA RELATIVO AL ÁREA VISIBLE
+    // El marco en CSS es width: 65% del CONTENEDOR (Área Visible)
+    const frameWidthPercent = 0.65; 
+    const frameAspectRatio = 1.586; // Ratio DNI
+
+    // El ancho del marco es 65% del ancho VISIBLE
+    const frameWidth = visibleWidth * frameWidthPercent;
     const frameHeight = frameWidth / frameAspectRatio;
-    
-    // Calcular posición centrada del marco
-    const frameX = (videoWidth - frameWidth) / 2;
-    const frameY = (videoHeight - frameHeight) / 2;
 
-    console.log('📐 Frame calculation:');
-    console.log('  - frameWidth:', Math.round(frameWidth), 'px');
-    console.log('  - frameHeight:', Math.round(frameHeight), 'px');
-    console.log('  - frameX:', Math.round(frameX), 'px');
-    console.log('  - frameY:', Math.round(frameY), 'px');
-    console.log('  - Crop area: from (', Math.round(frameX), ',', Math.round(frameY), ') size (', Math.round(frameWidth), 'x', Math.round(frameHeight), ')');
+    // Posición del marco relativa al video completo
+    // El marco está centrado en el área visible
+    const frameXInVisible = (visibleWidth - frameWidth) / 2;
+    const frameYInVisible = (visibleHeight - frameHeight) / 2;
 
-    // Extraer solo el área del marco guía
+    // Coordenadas finales de crop en el video original
+    const finalCropX = visibleX + frameXInVisible;
+    const finalCropY = visibleY + frameYInVisible;
+
+    console.log('✂️  Final Crop Calculation:');
+    console.log('  - Frame Width:', Math.round(frameWidth));
+    console.log('  - Frame Height:', Math.round(frameHeight));
+    console.log('  - Crop X:', Math.round(finalCropX));
+    console.log('  - Crop Y:', Math.round(finalCropY));
+
+    // Extraer
     const croppedImageData = ctx.getImageData(
-      frameX,
-      frameY,
+      finalCropX,
+      finalCropY,
       frameWidth,
       frameHeight
     );
 
-    console.log('✂️  Image cropped, data length:', croppedImageData.data.length);
-
-    // Crear nuevo canvas con solo el área recortada
+    // Crear canvas final
     const croppedCanvas = document.createElement('canvas');
     croppedCanvas.width = frameWidth;
     croppedCanvas.height = frameHeight;
@@ -362,22 +400,13 @@ export class DniScannerComponent implements OnInit, OnDestroy {
     
     if (!croppedCtx) return;
     
-    // Colocar imagen recortada en el nuevo canvas
     croppedCtx.putImageData(croppedImageData, 0, 0);
 
-    // Convertir a base64 - Solo el área del marco
     const imageBase64 = croppedCanvas.toDataURL('image/jpeg', 0.95);
 
-    console.log('🖼️  Final cropped image:');
-    console.log('  - Canvas dimensions:', croppedCanvas.width, 'x', croppedCanvas.height);
-    console.log('  - Base64 length:', imageBase64.length, 'characters');
-    console.log('  - Estimated size:', Math.round(imageBase64.length * 0.75 / 1024), 'KB');
-
-    // Emitir evento con imagen recortada
     this.imageCaptured.emit(imageBase64);
 
-    console.log('✅ DNI captured successfully (cropped to frame area)');
-    console.log(`📐 Frame dimensions: ${Math.round(frameWidth)}x${Math.round(frameHeight)}px`);
+    console.log('✅ DNI captured successfully (Visual Match Logic)');
   }
 
   /**
