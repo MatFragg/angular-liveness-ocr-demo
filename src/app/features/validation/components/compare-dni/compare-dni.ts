@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AppStateService } from '../../services/AppStateService';
+import { AppStateService } from '@core/services/app-state.service';
 import { FaceComparisonService } from '../../services/face-comparison.service';
 
 interface ComparisonResult {

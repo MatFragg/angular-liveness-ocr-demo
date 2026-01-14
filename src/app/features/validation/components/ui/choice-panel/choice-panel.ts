@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppStateService } from '../../services/AppStateService';
+import { AppStateService } from '@core/services/app-state.service';
 
 @Component({
   selector: 'app-choice-panel',

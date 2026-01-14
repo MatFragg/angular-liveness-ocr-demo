@@ -1,8 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppStateService } from '../../services/AppStateService';
+import { AppStateService } from '@core/services/app-state.service';
 import { FacialValidationRequest, FacialValidationResponse, ReniecService } from '../../services/reniec.service';
-import { DeviceInfoService } from '../../services/device-info.service';
+import { DeviceInfoService } from '@core/services/device-info.service';
 import { Router } from '@angular/router';
 
 @Component({

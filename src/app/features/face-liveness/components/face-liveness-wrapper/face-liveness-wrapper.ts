@@ -6,8 +6,8 @@ import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { FaceLivenessDetectorCore } from '@aws-amplify/ui-react-liveness';
 import '@aws-amplify/ui-react/styles.css';
-import { LivenessService } from '../../services/LivenessService';
-import { AppStateService } from '../../services/AppStateService';
+import { LivenessService } from '../../services/liveness.service';
+import { AppStateService } from '@core/services/app-state.service';
 
 @Component({
   selector: 'app-face-liveness-wrapper',
