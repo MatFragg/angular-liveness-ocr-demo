@@ -120,15 +120,15 @@ export class FaceLivenessWrapper implements AfterViewInit, OnDestroy {
           }
 
           // Navegar al siguiente paso
-          console.log('→ Navegando a choice...');
+          console.log('→ Navegando a validation choice...');
           setTimeout(() => {
             this.zone.run(() => {
               console.log('⚡ Ejecutando cambio en zone');
               this.appState.setCurrentStep('choice');
-              this.router.navigate(['/validation/choice']);
+              this.router.navigate(['/validation']);
               this.cd.markForCheck();
               this.cd.detectChanges();
-              console.log('✓ Paso actualizado a: choice y navegando...');
+              console.log('✓ Paso actualizado a: choice y navegando a /validation...');
             });
             resolve();
           }, 500);
