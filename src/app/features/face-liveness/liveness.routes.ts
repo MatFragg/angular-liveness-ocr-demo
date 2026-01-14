@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { dniCaptureGuard } from '@core/guards/dni-capture.guard';
+import { dniCaptureGuard } from '../../core/guards/dni-capture.guard';
 
 export const LIVENESS_ROUTES: Routes = [
   {
