@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
+import { environment } from '@env/environment.development';
 
 export interface FacialValidationRequest {
   serialNumber: string;
@@ -35,7 +36,8 @@ export interface FacialValidationResponse {
   providedIn: 'root'
 })
 export class ReniecService {
-  private apiUrl = 'http://localhost:8081/api/consultas';
+  private apiUrl = environment.acjApiUrl + environment.acjCompareEndpointPath;
+
 
   private defaultType = 'R';
   private defaultQuality = '/';
@@ -48,7 +50,7 @@ export class ReniecService {
     });
 
     console.log('Enviando request al backend:', {
-      url: `${this.apiUrl}/validacion-facial`,
+      url: `${this.apiUrl}`,
       dni: request.documentNumber,
       serialNumber: request.serialNumber
     });

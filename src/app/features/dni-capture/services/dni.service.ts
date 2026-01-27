@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DniData } from '../models/dni-data.model';
+import { environment } from '@env/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DniService {
-  private apiUrl = 'http://localhost:8081/api/dni';
+  private apiUrl = environment.apiUrl + environment.pathApi + environment.dniEndpointPath;
+  
 
   constructor(private http: HttpClient) {}
 

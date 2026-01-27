@@ -2,20 +2,21 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '@env/environment.development';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FaceComparisonService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8081/api/face-comparison';
+  private baseUrl = environment.acjApiUrl + environment.acjCaptureEndpointPath;
 
   compareFacesFromFiles(sourceImage: File, targetImage: File): Observable<any> {
     const formData = new FormData();
     formData.append('sourceImage', sourceImage);
     formData.append('targetImage', targetImage);
     
-    return this.http.post(`${this.baseUrl}/compare-files`, formData);
+    return this.http.post(`${this.baseUrl}`, formData);
   }
 
   compareFacesFromBase64(sourceBase64: string, targetBase64: string, similarityThreshold?: number): Observable<any> {
@@ -28,7 +29,7 @@ export class FaceComparisonService {
       body.similarityThreshold = similarityThreshold;
     }
     
-    return this.http.post(`${this.baseUrl}/compare-base64`, body);
+    return this.http.post(`${this.baseUrl}`, body);
   }
 
   compareWithLivenessReference(livenessSessionId: string, targetImage: File): Observable<any> {
