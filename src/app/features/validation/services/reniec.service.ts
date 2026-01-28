@@ -1,17 +1,20 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
-import { environment } from '@env/environment.development';
+import { Observable, catchError, throwError, switchMap, map } from 'rxjs';
+import { environment } from '@env/environment';
+import { TokenService } from '../../../core/services/token.service';
 
-export interface FacialValidationRequest {
-  serialNumber: string;
-  template: string;
-  type: string;
-  quality: string;
+// Request según documentación ACJ endpoint 5 (capture)
+export interface ReniecCaptureRequest {
   documentNumber: string;
+  serialNumber: string;
+  type: string;        // "R" por defecto
+  quality: string;     // "/" según documentación
+  template: string;    // Foto en Base64
 }
 
-export interface FacialValidationResponse {
+// Respuesta del endpoint capture de ACJ
+export interface ReniecCaptureResponse {
   result?: {
     code: string;
     info: string;
@@ -19,7 +22,7 @@ export interface FacialValidationResponse {
   data?: {
     reniecErrorCode: number;
     reniecErrorDescription: string;
-    documentType: number;
+    documentType?: number;
     documentNumber: string;
     personName: string;
     personLastName: string;
@@ -32,67 +35,150 @@ export interface FacialValidationResponse {
   };
 }
 
+// Modelo de dominio para la validación RENIEC
+export interface ReniecValidation {
+  documentNumber: string;
+  names: string;
+  lastNames: string;
+  expirationDate: string;
+  nationality: string;
+  responseCode: string;  // "HIT" o "NO HIT"
+  reniecCode: number;
+  reniecDescription: string;  // Descripción del código RENIEC
+  trackingToken: string;
+  isMatch: boolean;
+  // Campos adicionales para UI
+  validity?: string;
+  restriction?: string;
+  restrictionGroup?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ReniecService {
-  private apiUrl = environment.acjApiUrl + environment.acjCompareEndpointPath;
+  private http = inject(HttpClient);
+  private tokenService = inject(TokenService);
+  
+  private readonly captureUrl = `${environment.acjApiUrl}${environment.acjCaptureEndpointPath}`;
 
+  /**
+   * Realiza la validación facial contra RENIEC usando el endpoint capture de ACJ
+   * Similar a la implementación mobile que funcionaba correctamente
+   */
+  validateWithReniec(
+    dni: string,
+    photoBase64: string,
+    serialNumber: string = '123456789'
+  ): Observable<ReniecValidation> {
+    // Limpiar el base64 si tiene prefijo data:image
+    const cleanTemplate = this.cleanBase64(photoBase64);
+    
+    const request: ReniecCaptureRequest = {
+      documentNumber: dni,
+      serialNumber: serialNumber,
+      type: 'R',
+      quality: '/',
+      template: cleanTemplate
+    };
 
-  private defaultType = 'R';
-  private defaultQuality = '/';
+    console.log('🔄 Enviando validación RENIEC a:', this.captureUrl);
+    console.log('📄 DNI:', dni);
+    console.log('📷 Template length:', cleanTemplate.length);
 
-  constructor(private http: HttpClient) {}
+    return this.tokenService.getToken().pipe(
+      switchMap(token => {
+        const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        console.log('🔑 Token obtenido para RENIEC:', authToken.substring(0, 60) + '...');
+        
+        const headers = new HttpHeaders({
+          'Content-Type': 'application/json',
+          'Authorization': authToken,
+          'channel': environment.acjChannel
+        });
 
-  validacionFacial(request: FacialValidationRequest): Observable<FacialValidationResponse> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-
-    console.log('Enviando request al backend:', {
-      url: `${this.apiUrl}`,
-      dni: request.documentNumber,
-      serialNumber: request.serialNumber
-    });
-
-    return this.http.post<FacialValidationResponse>(
-      `${this.apiUrl}/validacion-facial`, 
-      request,
-      { headers }
-    ).pipe(
+        return this.http.post<ReniecCaptureResponse>(this.captureUrl, request, { headers });
+      }),
+      map(response => {
+        console.log('✅ Respuesta de ACJ RENIEC:', response);
+        return this.mapToDomain(response);
+      }),
       catchError(this.handleError)
     );
   }
 
-  buildFacialValidationRequest(
-    dni: string, 
-    livenessPhoto: string, 
-    serialNumber: string
-): FacialValidationRequest {
-    let cleanTemplate = livenessPhoto;
-    if (livenessPhoto && livenessPhoto.startsWith('data:image')) {
-        cleanTemplate = livenessPhoto.split(',')[1];
-    }
+  /**
+   * Método legacy para compatibilidad - redirige al nuevo método
+   */
+  validacionFacial(request: ReniecCaptureRequest): Observable<ReniecValidation> {
+    return this.validateWithReniec(
+      request.documentNumber,
+      request.template,
+      request.serialNumber
+    );
+  }
 
+  /**
+   * Helper para construir el request (compatibilidad con código existente)
+   */
+  buildFacialValidationRequest(
+    dni: string,
+    livenessPhoto: string,
+    serialNumber: string
+  ): ReniecCaptureRequest {
     return {
-        serialNumber: serialNumber,
-        template: cleanTemplate,
-        type: 'R',
-        quality: '/',  // IMPORTANTE: usar "/" como en la documentación
-        documentNumber: dni  // Sin "/" aquí, se agrega en el backend
+      documentNumber: dni,
+      serialNumber: serialNumber,
+      type: 'R',
+      quality: '/',
+      template: this.cleanBase64(livenessPhoto)
     };
-}
+  }
+
+  /**
+   * Mapea la respuesta de ACJ al modelo de dominio
+   * Similar al ReniecMapper de la app mobile
+   */
+  private mapToDomain(response: ReniecCaptureResponse): ReniecValidation {
+    const data = response.data;
+    const isHit = data?.reniecErrorCode === 70006;
+    
+    return {
+      documentNumber: data?.documentNumber || '',
+      names: data?.personName || '',
+      lastNames: `${data?.personLastName || ''} ${data?.personMotherLastName || ''}`.trim(),
+      expirationDate: data?.expirationDate || '',
+      nationality: 'PERUANA',
+      responseCode: isHit ? 'HIT' : 'NO HIT',
+      reniecCode: data?.reniecErrorCode || 0,
+      reniecDescription: data?.reniecErrorDescription || '',
+      trackingToken: data?.traking || '',
+      isMatch: isHit,
+      // Campos adicionales para UI
+      validity: data?.validity || '',
+      restriction: data?.restriction || '',
+      restrictionGroup: data?.restrictionGroup || ''
+    };
+  }
+
+  /**
+   * Limpia el prefijo data:image del base64 si existe
+   */
+  private cleanBase64(base64: string): string {
+    if (base64 && base64.includes('base64,')) {
+      return base64.split('base64,')[1];
+    }
+    return base64;
+  }
 
   private handleError(error: HttpErrorResponse) {
-    console.error('Error en servicio Reniec:', error);
+    console.error('❌ Error en servicio Reniec:', error);
     
     let errorMessage = 'Ocurrió un error desconocido';
     
     if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Error del lado del servidor
       switch (error.status) {
         case 0:
           errorMessage = 'No se pudo conectar con el servidor. Verifique su conexión a internet.';
@@ -119,11 +205,11 @@ export class ReniecService {
           errorMessage = `Error ${error.status}: ${error.message}`;
       }
       
-      // Si el backend devuelve un mensaje específico
-      if (error.error && error.error.message) {
+      // Si ACJ devuelve un mensaje específico
+      if (error.error?.result?.info) {
+        errorMessage = error.error.result.info;
+      } else if (error.error?.message) {
         errorMessage = error.error.message;
-      } else if (error.error && error.error.info) {
-        errorMessage = error.error.info;
       }
     }
     

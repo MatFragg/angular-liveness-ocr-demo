@@ -1,3 +1,7 @@
+/* AWS Amplify UI Styles (Required for Liveness component) */
+@import '@aws-amplify/ui-react/styles.css';
+@import '@aws-amplify/ui-react-liveness/styles.css';
+
 /* ====================================
    DESIGN SYSTEM - UX/UI Heuristics
    ==================================== */

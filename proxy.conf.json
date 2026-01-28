@@ -1,0 +1,15 @@
+{
+  "/acj-api": {
+    "target": "https://api.acjdigital.com",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/acj-api": ""
+    },
+    "logLevel": "debug",
+    "headers": {
+      "Connection": "keep-alive"
+    },
+    "onProxyReq": "function(proxyReq, req, res) { console.log('Proxying:', req.method, req.url); }"
+  }
+}

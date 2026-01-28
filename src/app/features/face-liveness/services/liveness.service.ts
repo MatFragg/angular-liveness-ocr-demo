@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '@env/environment.development';
+import { environment } from '@env/environment';
 
 export interface LivenessResult {
   sessionId: string;
@@ -20,7 +20,7 @@ export interface LivenessResult {
 
 @Injectable({ providedIn: 'root' })
 export class LivenessService {
-  private apiUrl = environment.apiUrl + environment.pathApi + environment.livenessEndpointPath;
+  private apiUrl = environment.apiUrl + environment.livenessEndpointPath;
 
   constructor(private http: HttpClient) {}
 

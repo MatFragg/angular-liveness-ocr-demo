@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppStateService } from '@core/services/app-state.service';
-import { FacialValidationRequest, FacialValidationResponse, ReniecService } from '../../services/reniec.service';
+import { ReniecCaptureRequest, ReniecValidation, ReniecService } from '../../services/reniec.service';
 import { DeviceInfoService } from '@core/services/device-info.service';
 import { Router } from '@angular/router';
 
@@ -14,13 +14,13 @@ import { Router } from '@angular/router';
 })
 export class ReniecExtract implements OnInit {
   // Datos del request
-  previewData: FacialValidationRequest | null = null;
+  previewData: ReniecCaptureRequest | null = null;
   serialNumber: string = '123456789';
   hasSerialNumber = false;
   
   // Estados de la UI
   isSending = false;
-  response: FacialValidationResponse | null = null;
+  response: ReniecValidation | null = null;
   error: string | null = null;
   
   // Información del estado actual
@@ -190,54 +190,19 @@ export class ReniecExtract implements OnInit {
     return true;
   }
 
-  private handleResponse(response: any): void {
-    console.log('Procesando respuesta...', response);
+  // Ahora el servicio devuelve ReniecValidation mapeado directamente
+  private handleResponse(response: ReniecValidation): void {
+    console.log('Procesando respuesta RENIEC...', response);
     
-    // CASO A: Backend devuelve solo el objeto data (sin result)
-    if (response && response.reniecErrorCode !== undefined) {
-      console.log('✓ Respuesta con solo data recibida');
-      
-      // Convertir el objeto data en la estructura completa
-      this.response = {
-        result: {
-          code: '000',
-          info: 'OK'
-        },
-        data: response
-      };
-      
-      this.processSuccessResponse();
-      return;
-    }
-    
-    // CASO B: Backend devuelve estructura completa con result y data
-    if (response && response.result && response.data) {
-      console.log('✓ Respuesta completa recibida');
-      
-      this.response = response;
-      
-      if (response.result.code === '000' || response.result.code === '0000') {
-        this.processSuccessResponse();
-      } else {
-        this.showError(response.result.info || 'Error en la validación');
-      }
-      return;
-    }
-    
-    // CASO C: Respuesta inesperada
-    this.showError('Formato de respuesta inesperado del servidor');
+    // El servicio ya mapeó la respuesta a ReniecValidation
+    this.response = response;
+    this.processSuccessResponse();
   }
 
   private processSuccessResponse(): void {
-    if (!this.response?.data) return;
+    if (!this.response) return;
     
-    console.log('✓ Validación exitosa');
-    
-    const errorDesc = this.response.data.reniecErrorDescription || '';
-    const personName = this.response.data.personName || '';
-    const personLastName = this.response.data.personLastName || '';
-    const personMotherLastName = this.response.data.personMotherLastName || '';
-    const documentNumber = this.response.data.documentNumber || '';
+    console.log('✓ Validación RENIEC exitosa');
     
     // Guardar el resultado de RENIEC en el estado
     this.appState.setReniecValidationResult(this.isHit);
@@ -248,17 +213,11 @@ export class ReniecExtract implements OnInit {
       this.showStatusMessage = true;
       
       // NO redirigir automáticamente - permitir que el usuario vea los datos
-      // this.isRedirecting = true;
-      // setTimeout(() => {
-      //   console.log('Redirigiendo a pantalla inicial...');
-      //   this.showFinalAlert();
-      //   this.appState.resetToStart();
-      // }, 3000);
     } else if (this.isNoHit) {
       this.statusMessage = 'NO HIT - La persona no coincide';
       this.showStatusMessage = true;
       
-      // También configurar redirección para NO HIT
+      // Configurar redirección para NO HIT
       this.isRedirecting = true;
       setTimeout(() => {
         console.log('Redirigiendo a pantalla inicial...');
@@ -272,9 +231,9 @@ export class ReniecExtract implements OnInit {
     
     console.log('Mensaje mostrado:', this.statusMessage);
     console.log('Datos de la persona:', {
-      nombre: personName + ' ' + personLastName + ' ' + personMotherLastName,
-      dni: documentNumber,
-      tracking: this.response.data.traking
+      nombre: this.response.names + ' ' + this.response.lastNames,
+      dni: this.response.documentNumber,
+      tracking: this.response.trackingToken
     });
     
     // Forzar detección de cambios para que Angular actualice la vista
@@ -311,43 +270,32 @@ export class ReniecExtract implements OnInit {
     }
   }
 
-  // Propiedades computadas para la vista
+  // Propiedades computadas para la vista - ahora usan ReniecValidation directamente
   get isHit(): boolean {
-    if (!this.response?.data) {
-      console.log('❌ isHit: false - no response.data');
+    if (!this.response) {
+      console.log('❌ isHit: false - no response');
       return false;
     }
     
-    const errorCode = Number(this.response.data.reniecErrorCode);
-    const errorDesc = this.response.data.reniecErrorDescription || '';
-    
+    // ReniecValidation ya tiene isMatch calculado por el servicio
     console.log('🔍 Verificando HIT:', {
-      errorCode,
-      errorDesc,
-      isCode70006: errorCode === 70006,
-      includesHIT: errorDesc.includes('HIT: Persona Identificada'),
-      fullData: this.response.data
+      isMatch: this.response.isMatch,
+      responseCode: this.response.responseCode,
+      reniecCode: this.response.reniecCode
     });
     
-    const result = errorCode === 70006 || errorDesc.includes('HIT: Persona Identificada');
-    console.log(`✅ isHit resultado: ${result}`);
-    
-    return result;
+    return this.response.isMatch;
   }
 
   get isNoHit(): boolean {
-    if (!this.response?.data) return false;
+    if (!this.response) return false;
     
-    const errorCode = Number(this.response.data.reniecErrorCode);
-    const errorDesc = this.response.data.reniecErrorDescription || '';
-    
-    return errorCode === 70007 || errorDesc.includes('NO HIT');
+    // reniecCode 70007 = NO HIT
+    return this.response.reniecCode === 70007 || this.response.responseCode === 'NO HIT';
   }
 
   get showSuccess(): boolean {
-    return (this.response?.data && this.isHit) || 
-           this.response?.result?.code === '000' || 
-           this.response?.result?.code === '0000';
+    return this.response !== null && this.isHit;
   }
 
   get hasResponse(): boolean {
@@ -360,13 +308,13 @@ export class ReniecExtract implements OnInit {
   }
 
   get isPersonaIdentificada(): boolean {
-    if (!this.response?.data) return false;
+    if (!this.response) return false;
     return this.isHit;
   }
 
   copyTracking(): void {
-    if (this.response?.data?.traking) {
-      navigator.clipboard.writeText(this.response.data.traking)
+    if (this.response?.trackingToken) {
+      navigator.clipboard.writeText(this.response.trackingToken)
         .then(() => {
           console.log('✓ Tracking copiado al portapapeles');
           this.statusMessage = 'Código copiado al portapapeles';
@@ -397,7 +345,7 @@ export class ReniecExtract implements OnInit {
   get validationStatus(): string {
     if (this.isHit) return 'HIT - Persona identificada';
     if (this.isNoHit) return 'NO HIT - No coincide';
-    if (this.showSuccess && this.response?.data) return 'Validación exitosa';
+    if (this.showSuccess && this.response) return 'Validación exitosa';
     return 'Pendiente';
   }
 
@@ -416,18 +364,16 @@ export class ReniecExtract implements OnInit {
   // Getter para depurar la visibilidad de la sección de datos de persona
   get shouldShowPersonData(): boolean {
     const hasResponse = this.response !== null;
-    const hasData = this.response?.data !== null && this.response?.data !== undefined;
     const hitStatus = this.isHit;
     
     console.log('🔍 shouldShowPersonData:', {
       hasResponse,
-      hasData,
       hitStatus,
-      result: hasResponse && hasData && hitStatus,
-      responseData: this.response?.data
+      result: hasResponse && hitStatus,
+      response: this.response
     });
     
-    return hasResponse && hasData && hitStatus;
+    return hasResponse && hitStatus;
   }
 
   onImageError(event: Event): void {

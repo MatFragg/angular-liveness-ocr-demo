@@ -35,8 +35,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "32kB",
+                  "maximumError": "64kB"
                 }
               ],
               "outputHashing": "all"
@@ -62,7 +62,8 @@
               "buildTarget": "aws-liveness-demo:build:production"
             },
             "development": {
-              "buildTarget": "aws-liveness-demo:build:development"
+              "buildTarget": "aws-liveness-demo:build:development",
+              "proxyConfig": "proxy.conf.js"
             }
           },
           "defaultConfiguration": "development"

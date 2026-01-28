@@ -159,10 +159,10 @@ export class DniScannerCaptureComponent implements OnInit, OnDestroy {
     const timeout = setTimeout(() => {
       if (this.uploading) {
         this.uploading = false;
-        this.snackBar.open('⏰ El proceso está tomando más tiempo de lo esperado. Por favor, intente nuevamente.', 'Cerrar', { duration: 5000 });
+        this.snackBar.open('⏰ El proceso está tomando más tiempo de lo esperado. Por favor, intente nuevamente.', 'Cerrar', { duration: 500000 });
         this.resetCaptureAfterError();
       }
-    }, 30000);
+    }, 300000);
 
     this.dniService.processDni(this.frontImageFile, this.backImageFile)
       .pipe(finalize(() => {
@@ -176,7 +176,7 @@ export class DniScannerCaptureComponent implements OnInit, OnDestroy {
             this.livenessReady = true;
             this.currentStep = 'completed';
 
-            this.snackBar.open('✅ DNI procesado y validado correctamente', 'Cerrar', { duration: 3000 });
+            this.snackBar.open('✅ DNI procesado y validado correctamente', 'Cerrar', { duration: 300000 });
 
             // Guardar en AppState
             const dniForAppState = {
