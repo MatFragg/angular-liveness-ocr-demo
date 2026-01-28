@@ -64,7 +64,7 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #3b82f6;
+            background: #1a1a1a;
             cursor: pointer;
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -215,7 +215,7 @@
         .vs-circle {
           width: 60px;
           height: 60px;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          background: linear-gradient(135deg, #1a1a1a, #404040);
           color: white;
           border-radius: 50%;
           display: flex;
@@ -223,7 +223,7 @@
           justify-content: center;
           font-weight: 700;
           font-size: 1.25rem;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          box-shadow: 0 4px 12px rgba(26, 26, 26, 0.3);
         }
       }
     }
@@ -380,7 +380,7 @@
               .detail-number {
                 font-size: 2rem;
                 font-weight: 700;
-                color: #3b82f6;
+                color: #1a1a1a;
               }
               
               .detail-status {
@@ -521,11 +521,11 @@
     }
     
     &.btn-primary {
-      background: #3b82f6;
+      background: #1a1a1a;
       color: white;
       
       &:hover:not(:disabled) {
-        background: #2563eb;
+        background: #000000;
       }
     }
     

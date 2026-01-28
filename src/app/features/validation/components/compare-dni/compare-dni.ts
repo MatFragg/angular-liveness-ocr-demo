@@ -194,9 +194,18 @@ export class CompareDni implements OnInit {
       },
       error: (error) => {
         console.error('Error en comparación:', error);
+        console.error('Error completo - result:', error.error?.result);
+        console.error('Error completo - data:', error.error?.data);
         this.comparing = false;
         this.loading = false;
-        this.errorMessage = `Error al comparar imágenes: ${error.error?.error || error.message}`;
+        
+        // Extraer mensaje de error del backend ACJ
+        const backendMessage = error.error?.result?.info || 
+                              error.error?.data?.message ||
+                              error.error?.message ||
+                              error.error?.error ||
+                              error.message;
+        this.errorMessage = `Error al comparar imágenes: ${backendMessage}`;
         this.cd.detectChanges();
       }
     });

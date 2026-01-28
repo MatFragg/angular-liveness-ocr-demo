@@ -158,7 +158,7 @@
     .dni-number {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #2563eb;
+      color: #1a1a1a;
       margin-bottom: 1rem;
       font-family: 'Courier New', monospace;
       letter-spacing: 2px;
@@ -235,8 +235,8 @@
     gap: 1rem;
 
     &:hover {
-      border-color: #3b82f6;
-      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+      border-color: #1a1a1a;
+      box-shadow: 0 10px 25px rgba(26, 26, 26, 0.1);
       transform: translateY(-2px);
     }
 
@@ -294,11 +294,11 @@
     }
 
     .btn-compare {
-      background: #2563eb;
+      background: #1a1a1a;
       color: white;
 
       &:hover {
-        background: #1d4ed8;
+        background: #000000;
       }
 
       &:active {

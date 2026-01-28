@@ -29,12 +29,19 @@ export class FaceComparisonService {
       return base64;
     };
 
+    const imageFirst = cleanBase64(sourceBase64);
+    const imageSecond = cleanBase64(targetBase64);
+    
     const body = {
-      imageFirst: cleanBase64(sourceBase64),
-      imageSecond: cleanBase64(targetBase64)
+      imageFirst,
+      imageSecond
     };
     
     console.log('🔄 Enviando comparación facial a:', this.compareUrl);
+    console.log('📊 Tamaño imageFirst (DNI):', imageFirst.length, 'chars');
+    console.log('📊 Tamaño imageSecond (Liveness):', imageSecond.length, 'chars');
+    console.log('🔍 Primeros 50 chars imageFirst:', imageFirst.substring(0, 50));
+    console.log('🔍 Primeros 50 chars imageSecond:', imageSecond.substring(0, 50));
     
     // Obtener token y enviar headers directamente (igual que TokenService)
     return this.tokenService.getToken().pipe(

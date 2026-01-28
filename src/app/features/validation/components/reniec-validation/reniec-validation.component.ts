@@ -16,24 +16,9 @@ import { ReniecExtract } from '../reniec-extract/reniec-extract';
     :host {
       display: block;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0c4a6e 100%);
+      background: #f5f5f5;
       background-attachment: fixed;
       position: relative;
-    }
-    
-    :host::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 40% 60%, rgba(139, 92, 246, 0.08) 0%, transparent 30%);
-      pointer-events: none;
-      z-index: 0;
     }
     
     .reniec-validation-container {
