@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http
 import { Observable, catchError, throwError, switchMap, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { TokenService } from '../../../core/services/token.service';
+import { LoggerService } from '../../../core/services/logger.service';
 
 // Request según documentación ACJ endpoint 5 (capture)
 export interface ReniecCaptureRequest {
@@ -59,6 +60,7 @@ export interface ReniecValidation {
 export class ReniecService {
   private http = inject(HttpClient);
   private tokenService = inject(TokenService);
+  private logger = inject(LoggerService);
   
   private readonly captureUrl = `${environment.acjApiUrl}${environment.acjCaptureEndpointPath}`;
 
@@ -82,14 +84,11 @@ export class ReniecService {
       template: cleanTemplate
     };
 
-    console.log('🔄 Enviando validación RENIEC a:', this.captureUrl);
-    console.log('📄 DNI:', dni);
-    console.log('📷 Template length:', cleanTemplate.length);
+    this.logger.log('VALIDATION', `Enviando validación RENIEC - DNI: ${dni}`);
 
     return this.tokenService.getToken().pipe(
       switchMap(token => {
         const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        console.log('🔑 Token obtenido para RENIEC:', authToken.substring(0, 60) + '...');
         
         const headers = new HttpHeaders({
           'Content-Type': 'application/json',
@@ -100,10 +99,10 @@ export class ReniecService {
         return this.http.post<ReniecCaptureResponse>(this.captureUrl, request, { headers });
       }),
       map(response => {
-        console.log('✅ Respuesta de ACJ RENIEC:', response);
+        this.logger.success('VALIDATION', 'Respuesta RENIEC recibida', { code: response.result?.code });
         return this.mapToDomain(response);
       }),
-      catchError(this.handleError)
+      catchError(err => this.handleError(err))
     );
   }
 
@@ -171,8 +170,8 @@ export class ReniecService {
     return base64;
   }
 
-  private handleError(error: HttpErrorResponse) {
-    console.error('❌ Error en servicio Reniec:', error);
+  private handleError = (error: HttpErrorResponse) => {
+    this.logger.error('Error en servicio RENIEC', { status: error.status, message: error.message });
     
     let errorMessage = 'Ocurrió un error desconocido';
     

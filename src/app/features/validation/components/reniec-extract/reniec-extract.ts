@@ -4,6 +4,7 @@ import { AppStateService } from '@core/services/app-state.service';
 import { ReniecCaptureRequest, ReniecValidation, ReniecService } from '../../services/reniec.service';
 import { DeviceInfoService } from '@core/services/device-info.service';
 import { Router } from '@angular/router';
+import { LoggerService } from '@core/services/logger.service';
 
 @Component({
   selector: 'app-reniec-extract',
@@ -45,7 +46,8 @@ export class ReniecExtract implements OnInit {
     private reniecService: ReniecService,
     private deviceInfo: DeviceInfoService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private logger: LoggerService
   ) {}
 
   ngOnInit() {
@@ -63,7 +65,7 @@ export class ReniecExtract implements OnInit {
     const currentStep = this.appState.getCurrentStep();
 
     if ((!hasDni || !hasLivenessPhoto) && currentStep === 'reniec-validation') {
-      console.log('🔄 REFRESH DETECTADO EN RENIEC-EXTRACT - Estado incompleto');
+      this.logger.warn('STATE', 'Refresh detectado - Estado incompleto, reiniciando');
       this.appState.resetToStart();
     }
   }
@@ -78,7 +80,7 @@ export class ReniecExtract implements OnInit {
   }
 
   private loadAppStateData(): void {
-    console.log('Cargando datos del AppState...');
+    this.logger.log('STATE', 'Cargando datos del AppState');
     
     this.dni = this.appState.getDniNumber();
     const livenessPhoto = this.appState.getLivenessPhoto();
@@ -136,7 +138,7 @@ export class ReniecExtract implements OnInit {
   }
 
   sendValidation(): void {
-    console.log('=== INICIANDO VALIDACIÓN FACIAL ===');
+    this.logger.log('VALIDATION', 'Iniciando validación facial');
     
     if (!this.previewData) {
       this.showError('No hay datos para enviar. Complete primero la verificación de liveness.');
@@ -155,12 +157,12 @@ export class ReniecExtract implements OnInit {
 
     this.reniecService.validacionFacial(this.previewData).subscribe({
       next: (resp) => {
-        console.log('=== RESPUESTA DEL BACKEND ===', resp);
+        this.logger.success('VALIDATION', 'Respuesta RENIEC recibida', resp);
         this.isSending = false;
         this.handleResponse(resp);
       },
       error: (err) => {
-        console.error('=== ERROR EN LA SOLICITUD ===', err);
+        this.logger.error('Error en validación RENIEC', err);
         this.isSending = false;
         this.showError(this.extractErrorMessage(err));
       }
@@ -192,7 +194,7 @@ export class ReniecExtract implements OnInit {
 
   // Ahora el servicio devuelve ReniecValidation mapeado directamente
   private handleResponse(response: ReniecValidation): void {
-    console.log('Procesando respuesta RENIEC...', response);
+    this.logger.log('VALIDATION', 'Procesando respuesta RENIEC');
     
     // El servicio ya mapeó la respuesta a ReniecValidation
     this.response = response;
@@ -202,7 +204,11 @@ export class ReniecExtract implements OnInit {
   private processSuccessResponse(): void {
     if (!this.response) return;
     
-    console.log('✓ Validación RENIEC exitosa');
+    this.logger.success('VALIDATION', 'Validación RENIEC completada', {
+      isHit: this.isHit,
+      nombre: this.response.names + ' ' + this.response.lastNames,
+      dni: this.response.documentNumber
+    });
     
     // Guardar el resultado de RENIEC en el estado
     this.appState.setReniecValidationResult(this.isHit);
@@ -211,8 +217,6 @@ export class ReniecExtract implements OnInit {
     if (this.isHit) {
       this.statusMessage = '¡Persona Identificada!';
       this.showStatusMessage = true;
-      
-      // NO redirigir automáticamente - permitir que el usuario vea los datos
     } else if (this.isNoHit) {
       this.statusMessage = 'NO HIT - La persona no coincide';
       this.showStatusMessage = true;
@@ -220,7 +224,7 @@ export class ReniecExtract implements OnInit {
       // Configurar redirección para NO HIT
       this.isRedirecting = true;
       setTimeout(() => {
-        console.log('Redirigiendo a pantalla inicial...');
+        this.logger.log('NAV', 'Redirigiendo a pantalla inicial');
         this.showFinalAlert();
         this.appState.resetToStart();
       }, 3000);
@@ -229,24 +233,14 @@ export class ReniecExtract implements OnInit {
       this.showStatusMessage = true;
     }
     
-    console.log('Mensaje mostrado:', this.statusMessage);
-    console.log('Datos de la persona:', {
-      nombre: this.response.names + ' ' + this.response.lastNames,
-      dni: this.response.documentNumber,
-      tracking: this.response.trackingToken
-    });
-    
-    // Forzar detección de cambios para que Angular actualice la vista
-    console.log('🔄 Forzando detección de cambios...');
     this.cdr.detectChanges();
-    console.log('✅ Detección de cambios completada');
   }
 
   private showError(message: string): void {
     this.error = message;
     this.statusMessage = '';
     this.showStatusMessage = false;
-    console.error('Error:', message);
+    this.logger.error('Validación fallida: ' + message);
   }
 
   private extractErrorMessage(error: any): string {
@@ -272,18 +266,7 @@ export class ReniecExtract implements OnInit {
 
   // Propiedades computadas para la vista - ahora usan ReniecValidation directamente
   get isHit(): boolean {
-    if (!this.response) {
-      console.log('❌ isHit: false - no response');
-      return false;
-    }
-    
-    // ReniecValidation ya tiene isMatch calculado por el servicio
-    console.log('🔍 Verificando HIT:', {
-      isMatch: this.response.isMatch,
-      responseCode: this.response.responseCode,
-      reniecCode: this.response.reniecCode
-    });
-    
+    if (!this.response) return false;
     return this.response.isMatch;
   }
 
@@ -303,7 +286,7 @@ export class ReniecExtract implements OnInit {
   }
 
   reset(): void {
-    console.log('Reiniciando componente...');
+    this.logger.log('STATE', 'Reiniciando componente');
     this.appState.resetToStart();
   }
 
@@ -331,7 +314,7 @@ export class ReniecExtract implements OnInit {
   }
 
   refreshData(): void {
-    console.log('Refrescando datos del estado...');
+    this.logger.log('STATE', 'Refrescando datos');
     this.loadAppStateData();
   }
 
@@ -361,23 +344,13 @@ export class ReniecExtract implements OnInit {
     this.statusMessage = '';
   }
 
-  // Getter para depurar la visibilidad de la sección de datos de persona
+  // Getter para mostrar la sección de datos de persona
   get shouldShowPersonData(): boolean {
-    const hasResponse = this.response !== null;
-    const hitStatus = this.isHit;
-    
-    console.log('🔍 shouldShowPersonData:', {
-      hasResponse,
-      hitStatus,
-      result: hasResponse && hitStatus,
-      response: this.response
-    });
-    
-    return hasResponse && hitStatus;
+    return this.response !== null && this.isHit;
   }
 
   onImageError(event: Event): void {
-    console.error('Error cargando la imagen:', event);
+    this.logger.warn('VALIDATION', 'Error cargando imagen, usando placeholder');
     const img = event.target as HTMLImageElement;
     img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNGMkYyRjIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjY2Ij5JbWFnZW4gbm8gZGlzcG9uaWJsZTwvdGV4dD48L3N2Zz4=';
   }

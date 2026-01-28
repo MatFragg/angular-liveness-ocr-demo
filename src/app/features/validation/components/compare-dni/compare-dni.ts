@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AppStateService } from '@core/services/app-state.service';
 import { FaceComparisonService } from '../../services/face-comparison.service';
-
+import { LoggerService } from '@core/services/logger.service';
 interface ComparisonResult {
   status: string;
   message: string;
@@ -37,6 +37,7 @@ export class CompareDni implements OnInit {
   private comparisonService = inject(FaceComparisonService);
   private router = inject(Router);
   private cd = inject(ChangeDetectorRef);
+  private logger = inject(LoggerService);
 
   // Estado del componente
   loading = false;
@@ -83,8 +84,7 @@ export class CompareDni implements OnInit {
     const dniPhoto = this.appState.getDniPhoto();
     const livenessPhoto = this.appState.getLivenessPhoto();
     
-    console.log('DNI Photo from state:', dniPhoto);
-    console.log('Liveness Photo from state:', livenessPhoto);
+    this.logger.log('STATE', 'Cargando fotos del estado', { hasDni: !!dniPhoto, hasLiveness: !!livenessPhoto });
     
     // Obtener imagen del DNI
     if (dniPhoto) {
@@ -155,9 +155,7 @@ export class CompareDni implements OnInit {
     this.errorMessage = null;
     this.successMessage = null;
     
-    console.log('Iniciando comparación...');
-    console.log('DNI Base64 length:', this.dniImageBase64?.length);
-    console.log('Liveness Base64 length:', this.livenessImageBase64?.length);
+    this.logger.log('VALIDATION', 'Iniciando comparación facial');
     
     this.comparisonService.compareFacesFromBase64(
       this.dniImageBase64,
@@ -165,7 +163,7 @@ export class CompareDni implements OnInit {
       this.similarityThreshold
     ).subscribe({
       next: (response) => {
-        console.log('Respuesta de comparación:', response);
+        this.logger.success('VALIDATION', 'Comparación completada', { match: response.isMatch, score: response.similarityScore });
         this.comparisonResult = response;
         this.comparing = false;
         this.loading = false;
@@ -193,9 +191,7 @@ export class CompareDni implements OnInit {
         this.cd.detectChanges();
       },
       error: (error) => {
-        console.error('Error en comparación:', error);
-        console.error('Error completo - result:', error.error?.result);
-        console.error('Error completo - data:', error.error?.data);
+        this.logger.error('Error en comparación facial', error.error?.result?.info || error.message);
         this.comparing = false;
         this.loading = false;
         
@@ -251,7 +247,7 @@ export class CompareDni implements OnInit {
     alert(alertMessage);
     this.appState.resetToStart();
     this.router.navigate(['/dni-capture']);
-    console.log('✅ Navegando a inicio después de finalizar');
+    this.logger.log('NAV', 'Navegando a inicio');
   }
 
   goBack(): void {

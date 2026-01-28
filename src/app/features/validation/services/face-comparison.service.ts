@@ -4,13 +4,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, switchMap, map } from 'rxjs';
 import { environment } from '@env/environment';
 import { TokenService } from '../../../core/services/token.service';
-
+import { LoggerService } from '../../../core/services/logger.service';
 @Injectable({
   providedIn: 'root'
 })
 export class FaceComparisonService {
   private http = inject(HttpClient);
   private tokenService = inject(TokenService);
+  private logger = inject(LoggerService);
   
   // Usar el endpoint de compare según la documentación de ACJ
   private compareUrl = environment.acjApiUrl + environment.acjCompareEndpointPath;
@@ -37,18 +38,12 @@ export class FaceComparisonService {
       imageSecond
     };
     
-    console.log('🔄 Enviando comparación facial a:', this.compareUrl);
-    console.log('📊 Tamaño imageFirst (DNI):', imageFirst.length, 'chars');
-    console.log('📊 Tamaño imageSecond (Liveness):', imageSecond.length, 'chars');
-    console.log('🔍 Primeros 50 chars imageFirst:', imageFirst.substring(0, 50));
-    console.log('🔍 Primeros 50 chars imageSecond:', imageSecond.substring(0, 50));
+    this.logger.log('API', `Comparación facial - DNI: ${imageFirst.length} chars, Liveness: ${imageSecond.length} chars`);
     
     // Obtener token y enviar headers directamente (igual que TokenService)
     return this.tokenService.getToken().pipe(
       switchMap(token => {
-        // Agregar prefijo Bearer si no lo tiene
         const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        console.log('🔑 Token obtenido para comparación:', authToken.substring(0, 60) + '...');
         
         const headers = new HttpHeaders({
           'Content-Type': 'application/json',
@@ -56,13 +51,11 @@ export class FaceComparisonService {
           'channel': environment.acjChannel
         });
         
-        console.log('📤 Enviando request con headers directos');
-        
         return this.http.post<any>(this.compareUrl, body, { headers });
       }),
       map(response => {
         // Transformar respuesta de ACJ al formato esperado por el componente
-        console.log('✅ Respuesta de ACJ:', response);
+        this.logger.success('API', 'Comparación facial completada', { match: response.data?.match, score: response.data?.similarityScore });
         return {
           status: response.result?.code === '000' ? 'SUCCESS' : 'ERROR',
           message: response.result?.info || '',

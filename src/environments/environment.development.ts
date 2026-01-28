@@ -1,4 +1,5 @@
 export const environment = {
+    production: false,
     apiUrl: 'https://springboot-liveness-ocr-demo.onrender.com',
     pathApi: '/api',
     dniEndpointPath: '/dni',
