@@ -310,13 +310,6 @@ textarea:invalid:not(:placeholder-shown) {
   }
 }
 
-/* === VIDEO & CANVAS (Heurística 6: Reconocimiento) === */
-video,
-canvas {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
 
 /* === SCROLLBAR STYLING === */
 ::-webkit-scrollbar {
@@ -343,7 +336,6 @@ canvas {
   color: var(--color-white);
 }
 
-/* === MATERIAL ICONS FIX === */
 mat-icon {
   font-family: 'Material Icons' !important;
   font-weight: normal;

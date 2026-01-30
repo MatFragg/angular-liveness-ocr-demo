@@ -1,5 +1,6 @@
 export const environment = {
     production: false,
+    //apiUrl: 'http://localhost:8081',
     apiUrl: 'https://springboot-liveness-ocr-demo.onrender.com',
     pathApi: '/api',
     dniEndpointPath: '/dni',
@@ -9,6 +10,7 @@ export const environment = {
     
     //acjApiUrl:'https://api.acjdigital.com',
     acjApiUrl:'https://springboot-liveness-ocr-demo.onrender.com',
+    //acjApiUrl: 'http://localhost:8081',
     acjTokenEndpointPath: '/management/v1/access/token',
     acjCaptureEndpointPath: '/management/v1/facial-biometrics/capture',
     acjCompareEndpointPath: '/management/v1/facial-biometrics/compare',
